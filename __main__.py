@@ -1,6 +1,6 @@
 import configparser
 from os import path
-from utils import InitBN
+from utils import InitBN, PlotBN
 
 def Main():
     """Main function of the project
@@ -14,7 +14,10 @@ def Main():
     assert path.exists(filePath), "Path to grid configuration file does not exist!"
 
     bayesNetwrok = InitBN(filePath)
-    print(bayesNetwrok.EnumerationAsk(((0, 0), (0, 1)), {"season": "low"}))
+    # PlotBN(bayesNetwrok.RemoveBarrenNodes([((1, 1), (1, 0))], {((1, 1), (1, 0)): False}))
+    print(bayesNetwrok.EnumerationAsk([((1, 1), (1, 0))], {"season": "low"}))
+
+    print('done')
 
 if __name__ == "__main__":
     Main()
