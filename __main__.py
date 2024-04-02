@@ -13,9 +13,9 @@ def Main():
     filePath = config['settings'].get('bayes_network_config_path', './tests/test0.txt')
     assert path.exists(filePath), "Path to grid configuration file does not exist!"
 
-    bayesNetwrok = InitBN(filePath)
-    # PlotBN(bayesNetwrok.RemoveBarrenNodes([((1, 1), (1, 0))], {((1, 1), (1, 0)): False}))
-    print(bayesNetwrok.EnumerationAsk([((1, 1), (1, 0))], {"season": "low"}))
+    bayesNetwork = InitBN(filePath)
+    PlotBN(bayesNetwork)
+    print(bayesNetwork.EnumerationAsk([((1, 1), (1, 0))], {}))
 
     print('done')
 

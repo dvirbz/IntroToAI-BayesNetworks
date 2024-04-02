@@ -111,4 +111,5 @@ def PlotBN(bayesNetwork: BayesNetwork):
 
     plt.title("Bayesian Network with Conditional Probability Tables")
     plt.axis('off')
+    plt.ion()
     plt.show()

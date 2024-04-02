@@ -1,6 +1,6 @@
 from __future__ import annotations
-import networkx as nx
 import copy as cp
+import networkx as nx
 from type_aliases import Node, Edge, BNNode
 
 class BayesNetwork:
@@ -102,7 +102,6 @@ class BayesNetwork:
             e[query] = q
             barrenBN = self.RemoveBarrenNodes(query, e)
             Q[q] = barrenBN.EnumerationAll(list(nx.topological_sort(barrenBN.bn)), e)
-        print(Q)
         return self.Normalize(Q)
 
     def EnumerationAll(self, nodes: list[Node], e: dict[Edge | Node, bool | str , str]) -> float:
@@ -124,18 +123,12 @@ class BayesNetwork:
         if isinstance(y, tuple) and y and isinstance(y[0], tuple): y = tuple(sorted(y))
         options = ['low', 'medium', 'high'] if isinstance(y, str) else [True, False]
         if y in e:
-            a = self.Probability(y, e, e[y])
-            b = self.EnumerationAll(nodes[1:], e)
-            print(y)
-            print(a)
-            print(b)
-            return a * b
-        a = [self.Probability(y, e, option) for option in options]
-        b = [self.EnumerationAll(nodes[1:], e | {y : option}) for option in options]
-        print(y, a, b)
-        print(e)
-        print('\n')
-        return np.inner(a, b)
+            p = self.Probability(y, e, e[y])
+            r = self.EnumerationAll(nodes[1:], e)
+            return p * r
+        p = [self.Probability(y, e, option) for option in options]
+        r = [self.EnumerationAll(nodes[1:], e | {y : option}) for option in options]
+        return np.inner(p, r)
 
     def Probability(self, y: BNNode, e: dict[Edge | Node, bool | str , str], option: str | bool) -> float:
         """
