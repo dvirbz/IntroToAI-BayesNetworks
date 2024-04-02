@@ -89,6 +89,7 @@ def PlotBN(bayesNetwork: BayesNetwork):
     import networkx as nx
     import matplotlib.pyplot as plt
 
+    if not bayesNetwork.bn: return # If the network is empty, do not plot
     pos = nx.spring_layout(bayesNetwork.bn)  # Generates a layout for nodes
     plt.figure(figsize=(16, 9))
     # Determine layout bounds to adjust annotation positions dynamically
@@ -113,3 +114,4 @@ def PlotBN(bayesNetwork: BayesNetwork):
     plt.axis('off')
     plt.ion()
     plt.show()
+    plt.pause(3)

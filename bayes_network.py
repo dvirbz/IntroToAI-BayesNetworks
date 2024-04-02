@@ -2,7 +2,6 @@ from __future__ import annotations
 import copy as cp
 import networkx as nx
 from type_aliases import Node, Edge, BNNode
-
 class BayesNetwork:
     """
     Represents a Bayesian network.
@@ -80,6 +79,22 @@ class BayesNetwork:
             dict[Node, float]: A dictionary mapping each node to its corresponding CPT.
         """
         return self._nodesCPT
+    
+    def EnumerationAskAll(self, e: dict[Edge | Node, bool | str , str]) -> dict[Edge | Node | str, dict[bool | str , float]]:
+        """
+        Performs enumeration-based inference for all queries in the Bayesian network.
+
+        Args:
+            e (dict): Evidence dictionary containing observed values for nodes or edges in the network.
+
+        Returns:
+            dict: A dictionary containing the probabilities of all queries in the network.
+                  The keys are the queries (nodes or edges) and the values are dictionaries
+                  representing the probability distribution for each query.
+        """
+        queries = list(nx.topological_sort(self.bn))
+        probabilityDict = {q: cp.deepcopy(self).EnumerationAsk([q], cp.copy(e)) for q in queries}
+        return probabilityDict
 
     def EnumerationAsk(self, query: BNNode, e: dict[Edge | Node, bool | str , str]) -> dict[str, float]:
         """
@@ -92,16 +107,22 @@ class BayesNetwork:
         Returns:
         A dictionary containing the probabilities of the query variable.
         """
+        # from utils import PlotBN
         Q = {}
+        # PlotBN(self)
         query = [tuple(sorted(q)) if isinstance(q, tuple) and q and isinstance(q[0], tuple) else q for q in query][0]
         options = ['low', 'medium', 'high'] if isinstance(query, str) else [True, False]
         if query in e:
-            otherOptions = options - e[query]
+            otherOptions = options[::]
+            otherOptions.remove(e[query])
             return {e[query]: 1.0} | {other: 0.0 for other in otherOptions}
         for q in options:
             e[query] = q
             barrenBN = self.RemoveBarrenNodes(query, e)
-            Q[q] = barrenBN.EnumerationAll(list(nx.topological_sort(barrenBN.bn)), e)
+            # PlotBN(barrenBN)
+            nodes = list(nx.topological_sort(barrenBN.bn))
+            print(f'{nodes=}, {e=}', '\n\n')
+            Q[q] = barrenBN.EnumerationAll(nodes, e)
         return self.Normalize(Q)
 
     def EnumerationAll(self, nodes: list[Node], e: dict[Edge | Node, bool | str , str]) -> float:
@@ -193,13 +214,17 @@ class BayesNetwork:
         """
         Removes barren nodes from the Bayesian network.
         """
+        if not isinstance(query, list): query = [query] # convert query to list if it is not
         newBN = cp.deepcopy(self)
-        for node in list(nx.topological_sort(self.bn)):
+        nodes = list(nx.topological_sort(self.bn))
+        print(f'{query=}, {nodes=}, {e=}')
+        for node in nodes:
             if newBN.bn.in_degree(node) == 0 and node in e and node not in query:
+                print(f'{node=}, {newBN.bn.in_degree(node)=}')
                 newBN.bn.remove_node(node)
-        for node in list(nx.topological_sort(self.bn))[::-1]:
+        for node in nodes[::-1]:
             if node not in newBN.bn.nodes: continue # if node was already removed, continue
             if newBN.bn.out_degree(node) == 0 and node not in e and node not in query:
+                print(f'{node=}, {newBN.bn.out_degree(node)=}')
                 newBN.bn.remove_node(node)
-
         return newBN

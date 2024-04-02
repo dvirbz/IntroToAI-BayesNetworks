@@ -14,9 +14,9 @@ def Main():
     assert path.exists(filePath), "Path to grid configuration file does not exist!"
 
     bayesNetwork = InitBN(filePath)
-    PlotBN(bayesNetwork)
-    print(bayesNetwork.EnumerationAsk([((1, 1), (1, 0))], {}))
-
+    # PlotBN(bayesNetwork)
+    # print(bayesNetwork.EnumerationAsk([(1,1)],{"season": "low"}))
+    print(bayesNetwork.EnumerationAskAll({(1,1): True}))
     print('done')
 
 if __name__ == "__main__":
