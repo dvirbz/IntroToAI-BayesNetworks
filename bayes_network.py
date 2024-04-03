@@ -2,6 +2,9 @@ from __future__ import annotations
 import copy as cp
 import networkx as nx
 from type_aliases import Node, Edge, BNNode
+
+ROUND_DIGITS = 5
+
 class BayesNetwork:
     """
     Represents a Bayesian network.
@@ -91,7 +94,7 @@ class BayesNetwork:
         """
         return self._evidence
 
-    def EmptyEvidence(self) -> None:
+    def ClearEvidence(self) -> None:
         """
         Clears all the evidence in the Bayesian network.
 
@@ -257,7 +260,7 @@ class BayesNetwork:
         The normalized dictionary of probabilities.
         """
         sumQ = sum(queryDict.values())
-        return {k: v/sumQ for k, v in queryDict.items()}
+        return {k: round(v/sumQ, ROUND_DIGITS) for k, v in queryDict.items()}
 
     def RemoveBarrenNodes(self, query: list[BNNode], e: dict[Node | Edge | str, bool | str]) -> BayesNetwork:
         """

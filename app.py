@@ -70,9 +70,9 @@ class NetworkGraphApp(QMainWindow):
         self.layout.addWidget(self.placeholder2)
 
         # Placeholder Button
-        self.placeholder2 = QPushButton('placeholder2', self)
-        # self.placeholder2.clicked.connect(self.close)
-        self.layout.addWidget(self.placeholder2)
+        self.ClearEvidence = QPushButton('Clear Evidence', self)
+        self.ClearEvidence.clicked.connect(self.bn.ClearEvidence)
+        self.layout.addWidget(self.ClearEvidence)
 
         # Button to process Quit
         self.quitButton = QPushButton('Quit', self)
@@ -90,7 +90,7 @@ class NetworkGraphApp(QMainWindow):
         # You can set a fixed width for the label or adjust it according to your needs
         self.infoLabel.setFixedWidth(int(self.width / 2))
         
-        self.placeholder1.clicked.connect(lambda: self.infoLabel.setText("Placeholder 1 clicked"))
+        self.placeholder1.clicked.connect(lambda: self.infoLabel.setText('\n'.join([f'{k}: {v}' for k, v in self.bn.EnumerationAskAll(self.bn.evidence).items()])))
 
         # Add the info label and existing vertical layout to the horizontal layout
         self.hLayout.addWidget(self.infoLabel)
