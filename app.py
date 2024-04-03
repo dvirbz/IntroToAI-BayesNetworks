@@ -70,9 +70,9 @@ class NetworkGraphApp(QMainWindow):
         self.layout.addWidget(self.placeholder2)
 
         # Placeholder Button
-        self.ClearEvidence = QPushButton('Clear Evidence', self)
-        self.ClearEvidence.clicked.connect(self.bn.ClearEvidence)
-        self.layout.addWidget(self.ClearEvidence)
+        self.clearEvidence = QPushButton('Clear Evidence', self)
+        self.clearEvidence.clicked.connect(self.bn.ClearEvidence)
+        self.layout.addWidget(self.clearEvidence)
 
         # Button to process Quit
         self.quitButton = QPushButton('Quit', self)
