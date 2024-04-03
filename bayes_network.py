@@ -34,7 +34,7 @@ class BayesNetwork:
         self._bn.add_nodes_from(nodes)
         self._bn.add_edges_from([("season", node) for node in nodes])
         self._bn.add_edges_from([(node, edge) for node in nodes for edge in fragEdges if node in edge])
-        self._evidence: dict[Edge | Node, bool | str , str] = {}
+        self._evidence: dict[BNNode, bool | str] = {}
 
     @property
     def bn(self) -> nx.DiGraph:
@@ -79,8 +79,57 @@ class BayesNetwork:
             dict[Node, float]: A dictionary mapping each node to its corresponding CPT.
         """
         return self._nodesCPT
-    
-    def EnumerationAskAll(self, e: dict[Edge | Node, bool | str , str]) -> dict[Edge | Node | str, dict[bool | str , float]]:
+
+    @property
+    def evidence(self) -> dict[BNNode, bool | str]:
+        """
+        Returns the evidence dictionary containing the observed values for each node in the Bayesian network.
+
+        Returns:
+            dict[BNNode, bool | str]: The evidence dictionary where the keys are the nodes in the network and the values
+            are the observed values for each node.
+        """
+        return self._evidence
+
+    def EmptyEvidence(self) -> None:
+        """
+        Clears all the evidence in the Bayesian network.
+
+        This method sets the evidence dictionary to an empty dictionary,
+        effectively removing all the evidence that has been previously set.
+        """
+        self._evidence = {}
+
+    def HierarchicalLayout(self, width=2, vertGap=0.3) -> dict[BNNode, tuple[float, float]]:
+        """
+        Calculates the positions of nodes in a hierarchical layout for a Bayesian network.
+
+        Parameters:
+        - width (float): The horizontal spacing between nodes in the second layer. Default is 2.
+        - vertGap (float): The vertical spacing between layers. Default is 0.3.
+
+        Returns:
+        - pos (dict): A dictionary containing the positions of nodes in the layout.
+            The keys are node names and the values are (x, y) coordinates.
+        """
+
+        pos = {}
+        pos['season'] = (0, 0)  # Place root at the top
+
+        # Calculate horizontal positions for the second layer
+        secondLayerNodes = list(self.bn.successors('season'))
+        for i, node in enumerate(secondLayerNodes):
+            pos[node] = (-width/2 + i * (width / (len(secondLayerNodes) - 1)), -vertGap)
+
+        # Calculate positions for the third layer based on their connections
+        for node in secondLayerNodes:
+            successors = list(self.bn.successors(node))
+            for _, succ in enumerate(successors):
+                pos[succ] = (pos[node][0], -2 * vertGap)
+
+        return pos
+
+    def EnumerationAskAll(self, e: dict[BNNode, bool | str]) -> dict[BNNode, dict[bool | str , float]]:
         """
         Performs enumeration-based inference for all queries in the Bayesian network.
 
@@ -96,7 +145,7 @@ class BayesNetwork:
         probabilityDict = {q: cp.deepcopy(self).EnumerationAsk([q], cp.copy(e)) for q in queries}
         return probabilityDict
 
-    def EnumerationAsk(self, query: BNNode, e: dict[Edge | Node, bool | str , str]) -> dict[str, float]:
+    def EnumerationAsk(self, query: BNNode, e: dict[BNNode, str | bool]) -> dict[str, float]:
         """
         Performs inference using the enumeration-ask algorithm.
 
@@ -108,7 +157,7 @@ class BayesNetwork:
         A dictionary containing the probabilities of the query variable.
         """
         # from utils import PlotBN
-        Q = {}
+        queryDict = {}
         # PlotBN(self)
         query = [tuple(sorted(q)) if isinstance(q, tuple) and q and isinstance(q[0], tuple) else q for q in query][0]
         options = ['low', 'medium', 'high'] if isinstance(query, str) else [True, False]
@@ -122,10 +171,10 @@ class BayesNetwork:
             # PlotBN(barrenBN)
             nodes = list(nx.topological_sort(barrenBN.bn))
             print(f'{nodes=}, {e=}', '\n\n')
-            Q[q] = barrenBN.EnumerationAll(nodes, e)
-        return self.Normalize(Q)
+            queryDict[q] = barrenBN.EnumerationAll(nodes, e)
+        return self.Normalize(queryDict)
 
-    def EnumerationAll(self, nodes: list[Node], e: dict[Edge | Node, bool | str , str]) -> float:
+    def EnumerationAll(self, nodes: list[Node], e: dict[BNNode, bool | str]) -> float:
         """
         Performs inference using the enumeration-all algorithm.
 
@@ -151,7 +200,7 @@ class BayesNetwork:
         r = [self.EnumerationAll(nodes[1:], e | {y : option}) for option in options]
         return np.inner(p, r)
 
-    def Probability(self, y: BNNode, e: dict[Edge | Node, bool | str , str], option: str | bool) -> float:
+    def Probability(self, y: BNNode, e: dict[BNNode, bool | str], option: str | bool) -> float:
         """
         Calculates the probability of a variable given evidence.
 
@@ -182,7 +231,7 @@ class BayesNetwork:
         if isinstance(node, tuple) and node and isinstance(node[0], int): return self._nodesCPT[node]
         return self._fragEdgesCPT[node]
 
-    def Parent(self, node: BNNode, e: dict[Edge | Node, bool | str , str]):
+    def Parent(self, node: BNNode, e: dict[BNNode, bool | str]):
         """
         Returns the parent nodes of the given node in the Bayesian network.
 
