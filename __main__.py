@@ -2,7 +2,7 @@ import configparser
 from os import path
 import sys
 from PyQt5.QtWidgets import QApplication
-from utils import InitBN, PlotBN
+from utils import InitBN
 from app import NetworkGraphApp
 
 def Main():
@@ -21,10 +21,6 @@ def Main():
     networkGraphApp = NetworkGraphApp(bayesNetwork)
     networkGraphApp.show()
     sys.exit(app.exec_())
-    # PlotBN(bayesNetwork)
-    # print(bayesNetwork.EnumerationAsk([(1,1)],{"season": "low"}))
-    # print(bayesNetwork.EnumerationAskAll({(1,1): True}))
-    print('done')
 
 if __name__ == "__main__":
     Main()

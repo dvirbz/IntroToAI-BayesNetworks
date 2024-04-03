@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QComboBox, QTextEdit, QPushButton, QLabel, QHBoxLayout
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas, NavigationToolbar2QT as NavigationToolbar
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas,\
+    NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
 import networkx as nx
 from bayes_network import BayesNetwork
