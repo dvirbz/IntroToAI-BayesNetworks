@@ -69,18 +69,8 @@ class NetworkGraphApp(QMainWindow):
         self.dropdown3.addItem("Select Path For Probability Calculation")
         for path in self.bn.AllSimplePathsEdges():
             self.dropdown3.addItem(str(path))
-        self.layout.addWidget(self.dropdown3)        
+        self.layout.addWidget(self.dropdown3)
         
-        # Placeholder Button
-        self.placeholder1 = QPushButton('Find Path Probablib', self)
-        # self.placeholder1.clicked.connect(self.close)
-        self.layout.addWidget(self.placeholder1)
-
-        # Placeholder Button
-        self.placeholder2 = QPushButton('placeholder2', self)
-        # self.placeholder2.clicked.connect(self.close)
-        self.layout.addWidget(self.placeholder2)
-
         # Button to process Quit
         self.quitButton = QPushButton('Quit', self)
         self.quitButton.clicked.connect(self.close)
