@@ -17,6 +17,12 @@ def Main():
     assert path.exists(filePath), "Path to grid configuration file does not exist!"
 
     bayesNetwork = InitBN(filePath)
+    print(bayesNetwork.AllSimplePathsEdges())
+    print(bayesNetwork.FindNonBlockedPath((0, 1), (1, 0), {'season': 'medium'}))
+    # print(bayesNetwork.EnumerationAsk([((0, 1), (1 , 1))], {'season': 'low'}), '\n\n')
+    # print(bayesNetwork.EnumerationAskSet([((1, 0), (1 , 1))], {'season': 'low'}), '\n\n')
+    # print(bayesNetwork.EnumerationAskSet([((0, 1), (1 , 1)), ((1, 0), (1 , 1)), ((0, 0), (0 , 1))], {'season': 'low'}), '\n\n')
+    # print(bayesNetwork.EnumerationAskSet([((1, 0), (1 , 1)), ((0, 0), (1 , 0))], {'season': 'low'}), '\n\n')
     app = QApplication(sys.argv)
     networkGraphApp = NetworkGraphApp(bayesNetwork)
     networkGraphApp.show()

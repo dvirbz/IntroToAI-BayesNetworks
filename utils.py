@@ -72,12 +72,15 @@ def InitBN(initFilePath: str) -> BayesNetwork:
         if action == 'F':
             fragEdgesCPT[tuple(sorted(((int(line[1]), int(line[2])),
                           (int(line[3]), int(line[4])))))] = CPTEdge(1 - float(line[5]), leakage)
+        if action == 'B':
+            fragEdgesCPT[tuple(sorted(((int(line[1]), int(line[2])),
+                          (int(line[3]), int(line[4])))))] = {k: 1.0 for k in [(False, False), (True, False), (False, True), (True, True)]}
     print("season: ", season)
     print("nodesCPT: ", nodesCPT)
     print("fragEdgesCPT: ", fragEdgesCPT)
     print('\n\n')
 
-    return BayesNetwork(season, fragEdgesCPT, nodesCPT)
+    return BayesNetwork(season, fragEdgesCPT, nodesCPT, x, y)
 
 def PlotBN(bayesNetwork: BayesNetwork):
     """

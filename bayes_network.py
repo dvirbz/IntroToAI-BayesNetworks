@@ -25,11 +25,12 @@ class BayesNetwork:
     - Normalize: Normalizes a dictionary of probabilities.
     """
 
-    def __init__(self, season: dict[str, list[float]], fragEdgesCPT: dict[Edge, float], nodesCPT: dict[Node, float]):
+    def __init__(self, season: dict[str, list[float]], fragEdgesCPT: dict[Edge, float], nodesCPT: dict[Node, float], x: int, y: int):
         self._season = season
         self._fragEdgesCPT = fragEdgesCPT
         self._nodesCPT = nodesCPT
         self._bn: nx.DiGraph = nx.DiGraph()
+        self._grid: nx.Graph = nx.grid_2d_graph(x + 1, y + 1)
         nodes = list(nodesCPT.keys())
         fragEdges = list(fragEdgesCPT.keys())
         self._bn.add_nodes_from({"season"})
@@ -49,6 +50,16 @@ class BayesNetwork:
         """
         return self._bn
 
+    @property
+    def grid(self) -> nx.Graph:
+        """
+        Returns the Full Grid associated with this object.
+        
+        Returns:
+            nx.Graph: The Grid.
+        """
+        return self._grid
+    
     @property
     def season(self) -> dict[str, list[float]]:
         """
@@ -125,12 +136,84 @@ class BayesNetwork:
             pos[node] = (-width/2 + i * (width / (len(secondLayerNodes) - 1)), -vertGap)
 
         # Calculate positions for the third layer based on their connections
-        for node in secondLayerNodes:
-            successors = list(self.bn.successors(node))
-            for _, succ in enumerate(successors):
-                pos[succ] = (pos[node][0], -2 * vertGap)
+        # for node in secondLayerNodes:
+        #     successors = list(self.bn.successors(node))
+        #     for i, succ in enumerate(successors):
+        i = 0
+        for node in self.bn.nodes:
+            if node in ['season'] + secondLayerNodes: continue
+            pos[node] = (-width/2 + i * (width / (len(self.bn.nodes) - len(secondLayerNodes) - 2)), -2 * vertGap)
+            i += 1
 
         return pos
+    def AllSimplePathsEdges(self) -> list[list[Edge]]:
+        """
+        Finds all simple paths between all nodes in the Bayes Network.
+
+        Returns:
+            list[list[Edge]]: A list of lists of nodes representing the paths between all nodes.
+
+        """
+        allPathsNodes = sum([self.AllSimplePathsStartToEndEdges(start, end) for start in self.grid.nodes for end in self.grid.nodes if start != end], [])
+        return allPathsNodes
+    
+    def AllSimplePathsStartToEndEdges(self, start: Node, end: Node) -> list[list[Edge]]:
+        """
+        Finds all simple paths between two nodes in the Bayes Network.
+
+        Args:
+            start (Node): The starting node of the path.
+            end (Node): The ending node of the path.
+
+        Returns:
+            list[list[Node]]: A list of lists of nodes representing the paths from start to end.
+
+        """
+        allPathsNodes = list(nx.all_simple_paths(self.grid, start, end))
+        allPathEdges = [[(allPathsNodes[i][j], allPathsNodes[i][j + 1]) for j in range(len(allPathsNodes[i]) - 1)] for i in range(len(allPathsNodes))]
+        return allPathEdges
+
+    def FindNonBlockedPath(self, start: Node, end: Node, e: dict[BNNode, bool | str]) -> list[Node]:
+        """
+        Finds a non-blocked path between two nodes in the Bayes Network.
+
+        Args:
+            start (Node): The starting node of the path.
+            end (Node): The ending node of the path.
+            e (dict[BNNode, bool | str]): Evidence dictionary containing the values of nodes.
+
+        Returns:
+            list[Node]: A list of nodes representing the non-blocked path from start to end.
+
+        """
+        # allPathsNodes = list(nx.all_simple_paths(self.grid, start, end))
+        # allPathEdges = [[(allPathsNodes[i][j], allPathsNodes[i][j + 1]) for j in range(len(allPathsNodes[i]) - 1)] for i in range(len(allPathsNodes))]
+        allPathEdges = self.AllSimplePathsStartToEndEdges(start, end)
+        print(f'{allPathEdges=}')
+        highProb = (0, [])
+        for path in allPathEdges:
+            currPathProb = (self.EnumerationAskSet(path, e | {}), path)
+            print(f'{currPathProb=}')
+            highProb = max(highProb, currPathProb)
+        return highProb
+
+    def EnumerationAskSet(self, querySet: list[BNNode], e: dict[BNNode, bool | str]) -> float:
+        """
+        Performs enumeration-based inference for all queries in the Bayesian network.
+
+        Args:
+            e (dict): Evidence dictionary containing observed values for nodes or edges in the network.
+
+        Returns:
+            dict: A dictionary containing the probabilities of all queries in the network.
+                  The keys are the queries (nodes or edges) and the values are dictionaries
+                  representing the probability distribution for each query.
+        """
+        if len(querySet) == 0: return 1.0
+        p = self.EnumerationAsk([querySet[0]], e | {})
+        pFalse = p[False]
+        # print(f'{querySet=}, {e=}, {p=}, {pFalse=}', '\n')
+        return round(pFalse * self.EnumerationAskSet(querySet[1:], e | {querySet[0]: False}), ROUND_DIGITS)
 
     def EnumerationAskAll(self, e: dict[BNNode, bool | str]) -> dict[BNNode, dict[bool | str , float]]:
         """
@@ -163,6 +246,7 @@ class BayesNetwork:
         queryDict = {}
         # PlotBN(self)
         query = [tuple(sorted(q)) if isinstance(q, tuple) and q and isinstance(q[0], tuple) else q for q in query][0]
+        if query not in self.bn.nodes: return {True: 0.0, False: 1.0}
         options = ['low', 'medium', 'high'] if isinstance(query, str) else [True, False]
         if query in e:
             otherOptions = options[::]
@@ -170,11 +254,11 @@ class BayesNetwork:
             return {e[query]: 1.0} | {other: 0.0 for other in otherOptions}
         for q in options:
             e[query] = q
-            barrenBN = self.RemoveBarrenNodes(query, e)
+            barrenBN = self.RemoveBarrenNodes(query, e | {})
             # PlotBN(barrenBN)
             nodes = list(nx.topological_sort(barrenBN.bn))
-            print(f'{nodes=}, {e=}', '\n\n')
-            queryDict[q] = barrenBN.EnumerationAll(nodes, e)
+            # print(f'{query=}, {nodes=}, {e=}', '\n\n')
+            queryDict[q] = barrenBN.EnumerationAll(nodes, e | {})
         return self.Normalize(queryDict)
 
     def EnumerationAll(self, nodes: list[Node], e: dict[BNNode, bool | str]) -> float:
@@ -260,6 +344,8 @@ class BayesNetwork:
         The normalized dictionary of probabilities.
         """
         sumQ = sum(queryDict.values())
+        # print(f'{queryDict=}, {sumQ=}', '\n\n')
+        if sumQ == 0: return queryDict
         return {k: round(v/sumQ, ROUND_DIGITS) for k, v in queryDict.items()}
 
     def RemoveBarrenNodes(self, query: list[BNNode], e: dict[Node | Edge | str, bool | str]) -> BayesNetwork:
@@ -269,14 +355,14 @@ class BayesNetwork:
         if not isinstance(query, list): query = [query] # convert query to list if it is not
         newBN = cp.deepcopy(self)
         nodes = list(nx.topological_sort(self.bn))
-        print(f'{query=}, {nodes=}, {e=}')
+        # print(f'{query=}, {nodes=}, {e=}')
         for node in nodes:
             if newBN.bn.in_degree(node) == 0 and node in e and node not in query:
-                print(f'{node=}, {newBN.bn.in_degree(node)=}')
+                # print(f'{node=}, {newBN.bn.in_degree(node)=}')
                 newBN.bn.remove_node(node)
         for node in nodes[::-1]:
             if node not in newBN.bn.nodes: continue # if node was already removed, continue
             if newBN.bn.out_degree(node) == 0 and node not in e and node not in query:
-                print(f'{node=}, {newBN.bn.out_degree(node)=}')
+                # print(f'{node=}, {newBN.bn.out_degree(node)=}')
                 newBN.bn.remove_node(node)
         return newBN

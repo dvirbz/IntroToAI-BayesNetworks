@@ -35,7 +35,7 @@ class NetworkGraphApp(QMainWindow):
 
         # Dropdown for selecting the query category (Layer)
         self.dropdown1 = QComboBox(self)
-        self.dropdown1.addItem("Select Option")
+        self.dropdown1.addItem("Select Node For Evidence")
         for node in self.bn.bn.nodes:
             if node != 'season' and sum(self.bn.VarCPT(node).values()) == 0: continue
             self.dropdown1.addItem(str(node))
@@ -55,13 +55,24 @@ class NetworkGraphApp(QMainWindow):
         self.dropdown1.currentIndexChanged.connect(self.UpdateDropdown2)
 
         # Results display area
-        self.resultsDisplay = QTextEdit(self)
-        self.resultsDisplay.setPlaceholderText('Results will be shown here...')
-        self.resultsDisplay.setReadOnly(True)
-        self.layout.addWidget(self.resultsDisplay)
+        self.evidenceDisplay = QTextEdit(self)
+        self.evidenceDisplay.setReadOnly(True)
+        self.layout.addWidget(self.evidenceDisplay)
 
         # Placeholder Button
-        self.placeholder1 = QPushButton('placeholder1', self)
+        self.clearEvidence = QPushButton('Clear Evidence', self)
+        self.clearEvidence.clicked.connect(self.ClearEvidence)
+        self.layout.addWidget(self.clearEvidence)
+        
+        # Dropdown for selecting the query category (Layer)
+        self.dropdown3 = QComboBox(self)
+        self.dropdown3.addItem("Select Path For Probability Calculation")
+        for path in self.bn.AllSimplePathsEdges():
+            self.dropdown3.addItem(str(path))
+        self.layout.addWidget(self.dropdown3)        
+        
+        # Placeholder Button
+        self.placeholder1 = QPushButton('Find Path Probablib', self)
         # self.placeholder1.clicked.connect(self.close)
         self.layout.addWidget(self.placeholder1)
 
@@ -69,11 +80,6 @@ class NetworkGraphApp(QMainWindow):
         self.placeholder2 = QPushButton('placeholder2', self)
         # self.placeholder2.clicked.connect(self.close)
         self.layout.addWidget(self.placeholder2)
-
-        # Placeholder Button
-        self.clearEvidence = QPushButton('Clear Evidence', self)
-        self.clearEvidence.clicked.connect(self.ClearEvidence)
-        self.layout.addWidget(self.clearEvidence)
 
         # Button to process Quit
         self.quitButton = QPushButton('Quit', self)
@@ -85,20 +91,27 @@ class NetworkGraphApp(QMainWindow):
         # self.mainWidget.setLayout(self.layout)
         self.hLayout = QHBoxLayout(self.mainWidget)
 
+        # Layout
+        self.layout2 = QVBoxLayout()
         # Text widget (QLabel) for displaying text information
-        self.infoLabel = QLabel("Information goes here")
+        self.infoLabel = QLabel()
         self.infoLabel.setWordWrap(True)  # Enable word wrap if needed
         # You can set a fixed width for the label or adjust it according to your needs
         self.infoLabel.setFixedWidth(int(self.width / 2))
-        
-        self.placeholder1.clicked.connect(lambda: self.infoLabel.setText('\n'.join([f'{k}: {v}' for k, v in self.bn.EnumerationAskAll(self.bn.evidence).items()])))
-
         # Add the info label and existing vertical layout to the horizontal layout
-        self.hLayout.addWidget(self.infoLabel)
-        self.hLayout.addLayout(self.layout)  # self.layout is your existing QVBoxLayout
-
+        self.layout2.addWidget(self.infoLabel)
+        self.CalculateProbabilities()
         self.setCentralWidget(self.mainWidget)
 
+
+        self.pathResults = QLabel("Path Results:")
+        self.pathResults.setWordWrap(True)  # Enable word wrap if needed
+        # Add the info label and existing vertical layout to the horizontal layout
+        self.layout2.addWidget(self.pathResults)
+        
+        self.hLayout.addLayout(self.layout)  # self.layout is your existing QVBoxLayout
+        self.hLayout.addLayout(self.layout2)  # self.layout is your existing QVBoxLayout
+        self.dropdown3.currentIndexChanged.connect(self.ProcessPathProbability)
         self.PlotGraph()
 
     def PlotGraph(self):
@@ -118,6 +131,9 @@ class NetworkGraphApp(QMainWindow):
 
         # Refresh canvas
         self.canvas.draw()
+        
+    def CalculateProbabilities(self):
+        self.infoLabel.setText('\n'.join([f'{k}: {v}' for k, v in self.bn.EnumerationAskAll(self.bn.evidence).items()]))
 
     def ProcessEvidence(self):
         # Example process: Use selections to generate a result
@@ -129,17 +145,18 @@ class NetworkGraphApp(QMainWindow):
         self.bn.evidence[node] = option
 
         # You would replace this with your actual query processing logic
-        if node != "Select Layer" and option != "Select Option":
-            self.resultsDisplay.setPlainText(f"Evidence is {self.bn.evidence}")
+        if node != "Select Node For Evidence" and option != "Select Evidence Value":
+            self.evidenceDisplay.setPlainText(f"Evidence is {self.bn.evidence}")
         else:
-            self.resultsDisplay.setPlainText("Please select valid options.")
+            self.evidenceDisplay.setPlainText("Please select valid options.")
+        self.CalculateProbabilities()
 
     def UpdateDropdown2(self):
         # Get the current text (selected item) from the first dropdown
         selectedItem = self.dropdown1.currentText()
 
         self.dropdown2.clear()
-        self.dropdown2.addItem('Select Option')
+        self.dropdown2.addItem('Select Evidence Value')
         if selectedItem.lower() == 'season':
             self.dropdown2.addItems(['Low', 'Medium', 'High'])
 
@@ -148,4 +165,11 @@ class NetworkGraphApp(QMainWindow):
 
     def ClearEvidence(self):
         self.bn.ClearEvidence()
-        self.resultsDisplay.setPlainText('')
+        self.evidenceDisplay.setPlainText('')
+        self.CalculateProbabilities()
+
+    def ProcessPathProbability(self):
+        # Example process: Use selections to generate a result
+        path = self.dropdown3.currentText()
+        if path != "Select Path For Probability Calculation":
+            self.pathResults.setText(f"Probability of Path {path} is:\n{self.bn.EnumerationAskSet(eval(path), self.bn.evidence)}")
