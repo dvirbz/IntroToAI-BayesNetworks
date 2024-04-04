@@ -37,6 +37,7 @@ class NetworkGraphApp(QMainWindow):
         self.dropdown1 = QComboBox(self)
         self.dropdown1.addItem("Select Option")
         for node in self.bn.bn.nodes:
+            if node != 'season' and sum(self.bn.VarCPT(node).values()) == 0: continue
             self.dropdown1.addItem(str(node))
         self.layout.addWidget(self.dropdown1)
 
@@ -71,7 +72,7 @@ class NetworkGraphApp(QMainWindow):
 
         # Placeholder Button
         self.clearEvidence = QPushButton('Clear Evidence', self)
-        self.clearEvidence.clicked.connect(self.bn.ClearEvidence)
+        self.clearEvidence.clicked.connect(self.ClearEvidence)
         self.layout.addWidget(self.clearEvidence)
 
         # Button to process Quit
@@ -144,3 +145,7 @@ class NetworkGraphApp(QMainWindow):
 
         else:
             self.dropdown2.addItems(['True', 'False'])
+
+    def ClearEvidence(self):
+        self.bn.ClearEvidence()
+        self.resultsDisplay.setPlainText('')
