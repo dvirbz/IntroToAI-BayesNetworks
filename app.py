@@ -70,12 +70,11 @@ class NetworkGraphApp(QMainWindow):
         for path in self.bn.AllSimplePathsEdges():
             self.dropdown3.addItem(str(path))
         self.layout.addWidget(self.dropdown3)
-
         # Set the layout on the application's window
         self.mainWidget = QWidget(self)
         # self.mainWidget.setLayout(self.layout)
         self.hLayout = QHBoxLayout(self.mainWidget)
-        self.startEndLayout = QHBoxLayout(self.mainWidget)
+        self.startEndLayout = QHBoxLayout()
         
         # Dropdown for selecting the query category (Layer)
         self.startDD = QComboBox(self)
@@ -93,14 +92,19 @@ class NetworkGraphApp(QMainWindow):
             if isinstance(node, tuple) and not isinstance(node[0], tuple):
                 self.endDD.addItem(str(node))
         self.startEndLayout.addWidget(self.endDD)
-        self.endDD.currentIndexChanged.connect(self.CalculateProbabilities)
-        
+        # self.endDD.currentIndexChanged.connect(self.CalculateProbabilities)
         self.layout.addLayout(self.startEndLayout)
+        
+        # Button to process Highest Probablity Path
+        self.hPPath = QPushButton('Process Highest Probability Path', self)
+        self.hPPath.clicked.connect(self.CalculateProbabilities)
+        self.layout.addWidget(self.hPPath)
         
         # Button to process Quit
         self.quitButton = QPushButton('Quit', self)
         self.quitButton.clicked.connect(self.close)
         self.layout.addWidget(self.quitButton)
+        
         # Layout
         self.layout2 = QVBoxLayout()
         # Text widget (QLabel) for displaying text information
@@ -117,7 +121,7 @@ class NetworkGraphApp(QMainWindow):
         
         # Add the info label and existing vertical layout to the horizontal layout
         self.layout2.addWidget(self.infoLabel)
-        self.layout2.addWidget(self.infoLabel2)
+        
         self.CalculateProbabilities()
         self.setCentralWidget(self.mainWidget)
 
@@ -126,7 +130,7 @@ class NetworkGraphApp(QMainWindow):
         self.pathResults.setWordWrap(True)  # Enable word wrap if needed
         # Add the info label and existing vertical layout to the horizontal layout
         self.layout2.addWidget(self.pathResults)
-        
+        self.layout2.addWidget(self.infoLabel2)
         self.hLayout.addLayout(self.layout)  # self.layout is your existing QVBoxLayout
         self.hLayout.addLayout(self.layout2)  # self.layout is your existing QVBoxLayout
         self.dropdown3.currentIndexChanged.connect(self.ProcessPathProbability)
@@ -149,14 +153,15 @@ class NetworkGraphApp(QMainWindow):
 
         # Refresh canvas
         self.canvas.draw()
-        
+
     def CalculateProbabilities(self):
         self.infoLabel.setText('\n'.join([f'{k}: {v}' for k, v in self.bn.EnumerationAskAll(self.bn.evidence).items()]))
         if self.startDD.currentText() == "Select Start Node for path" or self.endDD.currentText() == "Select End Node for path":
             return
+        print(f'{self.startDD.currentText()=}, {self.endDD.currentText()=}')
         startNode = eval(self.startDD.currentText())
         endNode = eval(self.endDD.currentText())
-        self.infoLabel2.setText('Highest probability of Non Blockage path is the path: ', self.bn.FindNonBlockedPath(startNode, endNode, self.bn.evidence))
+        self.infoLabel2.setText(f'Highest probability of Non Blockage path is the path: , {self.bn.FindNonBlockedPath(startNode, endNode, self.bn.evidence)}')
 
     def ProcessEvidence(self):
         # Example process: Use selections to generate a result
