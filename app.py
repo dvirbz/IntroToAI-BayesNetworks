@@ -70,17 +70,37 @@ class NetworkGraphApp(QMainWindow):
         for path in self.bn.AllSimplePathsEdges():
             self.dropdown3.addItem(str(path))
         self.layout.addWidget(self.dropdown3)
-        
-        # Button to process Quit
-        self.quitButton = QPushButton('Quit', self)
-        self.quitButton.clicked.connect(self.close)
-        self.layout.addWidget(self.quitButton)
 
         # Set the layout on the application's window
         self.mainWidget = QWidget(self)
         # self.mainWidget.setLayout(self.layout)
         self.hLayout = QHBoxLayout(self.mainWidget)
-
+        self.startEndLayout = QHBoxLayout(self.mainWidget)
+        
+        # Dropdown for selecting the query category (Layer)
+        self.startDD = QComboBox(self)
+        self.startDD.addItem("Select Start Node for path")
+        for node in self.bn.bn.nodes:
+            if isinstance(node, tuple) and not isinstance(node[0], tuple):
+                self.startDD.addItem(str(node))
+        self.startEndLayout.addWidget(self.startDD)
+        self.startDD.currentIndexChanged.connect(self.UpdateEndNodeDD)
+        
+        # Dropdown for selecting the query category (Layer)
+        self.endDD = QComboBox(self)
+        self.endDD.addItem("Select End Node for path")
+        for node in self.bn.bn.nodes:
+            if isinstance(node, tuple) and not isinstance(node[0], tuple):
+                self.endDD.addItem(str(node))
+        self.startEndLayout.addWidget(self.endDD)
+        self.endDD.currentIndexChanged.connect(self.CalculateProbabilities)
+        
+        self.layout.addLayout(self.startEndLayout)
+        
+        # Button to process Quit
+        self.quitButton = QPushButton('Quit', self)
+        self.quitButton.clicked.connect(self.close)
+        self.layout.addWidget(self.quitButton)
         # Layout
         self.layout2 = QVBoxLayout()
         # Text widget (QLabel) for displaying text information
@@ -88,8 +108,16 @@ class NetworkGraphApp(QMainWindow):
         self.infoLabel.setWordWrap(True)  # Enable word wrap if needed
         # You can set a fixed width for the label or adjust it according to your needs
         self.infoLabel.setFixedWidth(int(self.width / 2))
+        
+        # Text widget (QLabel) for displaying text information
+        self.infoLabel2 = QLabel()
+        self.infoLabel2.setWordWrap(True)  # Enable word wrap if needed
+        # You can set a fixed width for the label or adjust it according to your needs
+        self.infoLabel2.setFixedWidth(int(self.width / 2))
+        
         # Add the info label and existing vertical layout to the horizontal layout
         self.layout2.addWidget(self.infoLabel)
+        self.layout2.addWidget(self.infoLabel2)
         self.CalculateProbabilities()
         self.setCentralWidget(self.mainWidget)
 
@@ -124,6 +152,11 @@ class NetworkGraphApp(QMainWindow):
         
     def CalculateProbabilities(self):
         self.infoLabel.setText('\n'.join([f'{k}: {v}' for k, v in self.bn.EnumerationAskAll(self.bn.evidence).items()]))
+        if self.startDD.currentText() == "Select Start Node for path" or self.endDD.currentText() == "Select End Node for path":
+            return
+        startNode = eval(self.startDD.currentText())
+        endNode = eval(self.endDD.currentText())
+        self.infoLabel2.setText('Highest probability of Non Blockage path is the path: ', self.bn.FindNonBlockedPath(startNode, endNode, self.bn.evidence))
 
     def ProcessEvidence(self):
         # Example process: Use selections to generate a result
@@ -152,6 +185,17 @@ class NetworkGraphApp(QMainWindow):
 
         else:
             self.dropdown2.addItems(['True', 'False'])
+
+    def UpdateEndNodeDD(self):
+        # Get the current text (selected item) from the first dropdown
+        selectedItem = eval(self.startDD.currentText())
+
+        self.endDD.clear()
+        self.endDD.addItem('Select End Node for path')
+        for node in self.bn.bn.nodes:
+            if node != selectedItem and isinstance(node, tuple) and not isinstance(node[0], tuple):
+                print(f"{node=}, {selectedItem=}")
+                self.endDD.addItem(str(node))
 
     def ClearEvidence(self):
         self.bn.ClearEvidence()
