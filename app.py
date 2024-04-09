@@ -161,7 +161,7 @@ class NetworkGraphApp(QMainWindow):
         print(f'{self.startDD.currentText()=}, {self.endDD.currentText()=}')
         startNode = eval(self.startDD.currentText())
         endNode = eval(self.endDD.currentText())
-        self.infoLabel2.setText(f'Highest probability of Non Blockage path is the path: , {self.bn.FindNonBlockedPath(startNode, endNode, self.bn.evidence)}')
+        self.infoLabel2.setText(f'Highest probability of Non Blockage path is the path: {self.bn.FindNonBlockedPath(startNode, endNode, self.bn.evidence)}')
 
     def ProcessEvidence(self):
         # Example process: Use selections to generate a result

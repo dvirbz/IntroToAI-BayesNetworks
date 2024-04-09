@@ -194,7 +194,7 @@ class BayesNetwork:
         for path in allPathEdges:
             currPathProb = (self.EnumerationAskSet(path, e | {}), path)
             print(f'{currPathProb=}')
-            highProb = max(highProb, currPathProb)
+            highProb = max(highProb, currPathProb, key=lambda x: (x[0], -len(x[1])))
         return highProb
 
     def EnumerationAskSet(self, querySet: list[BNNode], e: dict[BNNode, bool | str]) -> float:
