@@ -70,6 +70,7 @@ class NetworkGraphApp(QMainWindow):
         for path in self.bn.AllSimplePathsEdges():
             self.dropdown3.addItem(str(path))
         self.layout.addWidget(self.dropdown3)
+        
         # Set the layout on the application's window
         self.mainWidget = QWidget(self)
         # self.mainWidget.setLayout(self.layout)
@@ -97,7 +98,6 @@ class NetworkGraphApp(QMainWindow):
         
         # Button to process Highest Probablity Path
         self.hPPath = QPushButton('Process Highest Probability Path', self)
-        self.hPPath.clicked.connect(self.CalculateProbabilities)
         self.layout.addWidget(self.hPPath)
         
         # Button to process Quit
@@ -134,6 +134,8 @@ class NetworkGraphApp(QMainWindow):
         self.hLayout.addLayout(self.layout)  # self.layout is your existing QVBoxLayout
         self.hLayout.addLayout(self.layout2)  # self.layout is your existing QVBoxLayout
         self.dropdown3.currentIndexChanged.connect(self.ProcessPathProbability)
+        self.hPPath.clicked.connect(self.CalculateProbabilities)
+
         self.PlotGraph()
 
     def PlotGraph(self):
@@ -177,6 +179,7 @@ class NetworkGraphApp(QMainWindow):
             self.evidenceDisplay.setPlainText(f"Evidence is {self.bn.evidence}")
         else:
             self.evidenceDisplay.setPlainText("Please select valid options.")
+        self.ProcessPathProbability()
         self.CalculateProbabilities()
 
     def UpdateDropdown2(self):
@@ -206,6 +209,7 @@ class NetworkGraphApp(QMainWindow):
         self.bn.ClearEvidence()
         self.evidenceDisplay.setPlainText('')
         self.CalculateProbabilities()
+        self.ProcessPathProbability()
 
     def ProcessPathProbability(self):
         # Example process: Use selections to generate a result

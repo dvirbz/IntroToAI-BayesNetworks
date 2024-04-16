@@ -8,7 +8,7 @@
 
 #V 1 0 0.2    ; Vertex (1,0) probability of package given low demand season 0.2
 #V 1 1 0.3    ; Vertex (1,1) probability package given low demand  0.3
-#V 0 1 0.7    ; Vertex (1,1) probability package given low demand  0.3
+#V 0 1 0.7    ; Vertex (1,1) probability package given low demand  0.7
               ; Either assume package probability 0 by default,
               ; or make sure to specify this probability for all vertices.
 #L 0.1        ; Global leakage probability 0.1

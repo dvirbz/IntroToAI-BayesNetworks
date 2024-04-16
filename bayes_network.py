@@ -210,9 +210,10 @@ class BayesNetwork:
                   representing the probability distribution for each query.
         """
         if len(querySet) == 0: return 1.0
+        print(f'{querySet=}, {e=}', '\n')
         p = self.EnumerationAsk([querySet[0]], e | {})
         pFalse = p[False]
-        # print(f'{querySet=}, {e=}, {p=}, {pFalse=}', '\n')
+        print(f'{querySet=}, {e=}, {p=}, {pFalse=}', '\n\n')
         return round(pFalse * self.EnumerationAskSet(querySet[1:], e | {querySet[0]: False}), ROUND_DIGITS)
 
     def EnumerationAskAll(self, e: dict[BNNode, bool | str]) -> dict[BNNode, dict[bool | str , float]]:
